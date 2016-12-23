@@ -1,0 +1,7 @@
+(.*)\.berkeley.edu
+(.*)\.ca
+(.*)\.fr
+(.*)\.org
+(.*)\.gov
+(.*)\.bing.com
+(.*)\.microsoft.com
