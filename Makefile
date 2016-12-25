@@ -38,7 +38,7 @@ SOURCES = \
 	cache.cc \
 	blacklist.cc \
 	ostreamlock.cc \
-	string-utils.cc
+	string-utils.cc \
 
 HEADERS = $(SOURCES:.cc=.h)
 OBJECTS = $(SOURCES:.cc=.o)

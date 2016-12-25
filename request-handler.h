@@ -10,6 +10,7 @@
 
 #include <utility>     // for pair
 #include <string>      // for string
+#include "request.h"
 
 class HTTPRequestHandler {
  public:
@@ -23,6 +24,9 @@ class HTTPRequestHandler {
  */
 
   void serviceRequest(const std::pair<int, std::string>& connection) throw();
+
+ private:
+     HTTPRequest httprequest;
 };
 
 #endif

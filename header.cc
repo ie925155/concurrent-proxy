@@ -7,6 +7,7 @@
 
 #include "header.h"
 
+#include <iostream> // for cerr
 #include <sstream>
 #include "string-utils.h"
 

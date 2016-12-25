@@ -23,6 +23,7 @@ void HTTPRequest::ingestRequestLine(istream& instream) throw (HTTPBadRequestExce
   istringstream iss(requestLine);
   iss >> method >> url >> protocol;
   server = url;
+  cout << server << endl;
   size_t pos = server.find(kProtocolPrefix);
   server.erase(0, kProtocolPrefix.size());
   pos = server.find('/');
@@ -44,6 +45,13 @@ void HTTPRequest::ingestRequestLine(istream& instream) throw (HTTPBadRequestExce
 
 void HTTPRequest::ingestHeader(istream& instream, const string& clientIPAddress) {
   requestHeader.ingestHeader(instream);
+  requestHeader.addHeader("x-forwarded-proto", "http");
+  if (requestHeader.containsName("x-forwarded-for")) {
+    string value = requestHeader.getValueAsString("x-forwarded-for") + "," + clientIPAddress;
+    requestHeader.addHeader("x-forwarded-for", value);
+  } else {
+    requestHeader.addHeader("x-forwarded-for", clientIPAddress);
+  }
 }
 
 bool HTTPRequest::containsName(const string& name) const {
