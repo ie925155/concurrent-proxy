@@ -25,9 +25,12 @@ using namespace std;
 
 const int kClientSocketError = -1;
 const int kBadRequest = 400;
+const int kForbiddenRequest = 403;
 
-static int createClientSocket(const string& host,
-		       unsigned short port) {
+HTTPRequestHandler::HTTPRequestHandler(void)
+ : blacklist("blocked-domains.txt") {}
+
+static int createClientSocket(const string& host, unsigned short port) {
 
   struct hostent *he = gethostbyname(host.c_str());
   if (he == NULL) return kClientSocketError;
@@ -52,7 +55,8 @@ static int createClientSocket(const string& host,
 }
 
 
-void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection) throw() {
+void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
+	throw() {
   sockbuf sb(connection.first);
   iosockstream client_stream(&sb);
   HTTPRequest request;
@@ -68,6 +72,12 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection) thr
  	  client_stream << response << flush;
       return;
   }
+  if(!blacklist.serverIsAllowed(request.getServer())){
+      response.setPayload("Forbidden Content");
+ 	  response.setResponseCode(kForbiddenRequest);
+ 	  client_stream << response << flush;
+	  return;
+  };
   request.ingestHeader(client_stream, connection.second);
   request.ingestPayload(client_stream);
   int client_fd = createClientSocket(request.getServer(), request.getPort());

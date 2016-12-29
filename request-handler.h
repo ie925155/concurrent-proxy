@@ -11,9 +11,11 @@
 #include <utility>     // for pair
 #include <string>      // for string
 #include "request.h"
+#include "blacklist.h"
 
 class HTTPRequestHandler {
  public:
+    HTTPRequestHandler(void);
 
 /**
  * Reads the entire HTTP request from the provided socket (the int portion
@@ -27,6 +29,7 @@ class HTTPRequestHandler {
 
  private:
      HTTPRequest httprequest;
+     HTTPBlacklist blacklist;
 };
 
 #endif
