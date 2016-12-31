@@ -4,7 +4,8 @@
  * Presents the implementation of the HTTPCache class as
  * presented in http-response-cache.h.
  */
-
+ 
+#include <unistd.h>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -48,7 +49,7 @@ bool HTTPCache::containsCacheEntry(const HTTPRequest& request, HTTPResponse& res
   if (!cachedEntryIsValid(cachedFileName)) {
     remove(fullCacheEntryName.c_str());
     string fullCacheDirectoryName = cacheDirectory + "/" + requestHash;
-    //unlink(fullCacheDirectoryName.c_str());
+    unlink(fullCacheDirectoryName.c_str());
     return false;
   }
 
