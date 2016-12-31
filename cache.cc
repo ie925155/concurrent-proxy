@@ -4,7 +4,7 @@
  * Presents the implementation of the HTTPCache class as
  * presented in http-response-cache.h.
  */
- 
+
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
@@ -12,7 +12,8 @@
 #include <functional>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <dirent.h>
+#include <sys/dir.h>
+//#include <dirent.h>
 
 #include "cache.h"
 #include "request.h"
@@ -131,11 +132,12 @@ string HTTPCache::getRequestHashCacheEntryName(const string& requestHash) const 
   return cachedEntryName;
 }
 
-static const int kDefaultPermissions = 644;
+static const int kDefaultPermissions = 0755;
 void HTTPCache::ensureDirectoryExists(const string& directory, bool empty) const {
   struct stat st;
-  if (lstat(directory.c_str(), &st) != 0)
+  if (lstat(directory.c_str(), &st) != 0){
     mkdir(directory.c_str(), kDefaultPermissions);
+}
 
   if (!empty) return;
   DIR *dir = opendir(directory.c_str());

@@ -12,6 +12,7 @@
 #include <string>      // for string
 #include "request.h"
 #include "blacklist.h"
+#include "cache.h"
 
 class HTTPRequestHandler {
  public:
@@ -30,6 +31,7 @@ class HTTPRequestHandler {
  private:
      HTTPRequest httprequest;
      HTTPBlacklist blacklist;
+     HTTPCache cache;
 };
 
 #endif

@@ -80,6 +80,11 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   };
   request.ingestHeader(client_stream, connection.second);
   request.ingestPayload(client_stream);
+  if(cache.containsCacheEntry(request, response)){
+	printf("containCacheEntry!!!!!\n");
+  	client_stream << response << flush;
+	return;
+  }
   int client_fd = createClientSocket(request.getServer(), request.getPort());
   if(client_fd == kClientSocketError) {
       cerr << "can not open a client socket" << endl;
@@ -91,5 +96,9 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   server_stream << request << flush;
   response.ingestResponseHeader(server_stream);
   response.ingestPayload(server_stream);
+  if(cache.shouldCache(request, response)){
+	  printf("CacheEntry!!!!!\n");
+	  cache.cacheEntry(request, response);
+  }
   client_stream << response << flush;
 }
