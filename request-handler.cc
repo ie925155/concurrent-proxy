@@ -26,15 +26,20 @@ using namespace std;
 const int kClientSocketError = -1;
 const int kBadRequest = 400;
 const int kForbiddenRequest = 403;
+#define TMPLEN 8192
 
 HTTPRequestHandler::HTTPRequestHandler(void)
  : blacklist("blocked-domains.txt") {}
 
 static int createClientSocket(const string& host, unsigned short port) {
-
-  struct hostent *he = gethostbyname(host.c_str());
-  if (he == NULL) return kClientSocketError;
-
+  struct hostent hbuf, *hp; /* output DNS host entry */
+  char tmp[TMPLEN];         /* temporary scratch buffer */
+  int my_h_errno, rc;       /* DNS error code and return code */
+  rc = gethostbyname_r(host.c_str(), &hbuf, tmp, TMPLEN, &hp, &my_h_errno);
+  if (rc != 0) {
+    cout << "gethostbyname_r error: " << hstrerror(my_h_errno) << endl;
+  }
+  //cout << "official hostname: " <<  hp->h_name << endl;
   int s = socket(AF_INET, SOCK_STREAM, 0);
   if (s < 0) return kClientSocketError;
 
@@ -43,7 +48,7 @@ static int createClientSocket(const string& host, unsigned short port) {
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons(port);
   serverAddress.sin_addr.s_addr =
-    ((struct in_addr *)he->h_addr)->s_addr;
+    ((struct in_addr *)hbuf.h_addr)->s_addr;
 
   if (connect(s, (struct sockaddr *) &serverAddress,
 	      sizeof(serverAddress)) != 0) {
