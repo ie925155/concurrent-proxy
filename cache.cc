@@ -103,10 +103,14 @@ bool HTTPCache::cacheEntryExists(const string& requestHash) const {
 
   DIR *dir = opendir(path.c_str());
   bool exists = false;
+  struct dirent entry, *result;
   while (!exists) {
-    struct dirent *entry = readdir(dir);
-    if (entry == NULL) break;
-    string dirEntry = entry->d_name;
+    int ret = readdir_r(dir, &entry, &result);
+    if(ret > 0 && result == NULL){
+        cerr << "readdir_r failed ret=" << ret << endl;
+        break;
+    }
+    string dirEntry = entry.d_name;
     exists = dirEntry != "." && dirEntry != "..";
   }
 
@@ -119,11 +123,15 @@ string HTTPCache::getRequestHashCacheEntryName(const string& requestHash) const 
   DIR *dir = opendir(requestHashDirectory.c_str());
   if (dir == NULL) return "";
   string cachedEntryName;
+  struct dirent entry, *result;
 
   while (true) {
-    struct dirent *entry = readdir(dir);
-    if (entry == NULL) break;
-    cachedEntryName = entry->d_name;
+    int ret = readdir_r(dir, &entry, &result);
+    if(ret > 0 && result == NULL){
+        cerr << "readdir_r failed ret=" << ret << endl;
+        break;
+    }
+    cachedEntryName = entry.d_name;
     if (cachedEntryName != "." && cachedEntryName != "..") break;
   }
 
@@ -141,10 +149,14 @@ void HTTPCache::ensureDirectoryExists(const string& directory, bool empty) const
 
   if (!empty) return;
   DIR *dir = opendir(directory.c_str());
+  struct dirent entry, *result;
   while (true) {
-    struct dirent *entry = readdir(dir);
-    if (entry == NULL) break;
-    string dirEntry = entry->d_name;
+    int ret = readdir_r(dir, &entry, &result);
+    if(ret > 0 && result == NULL){
+        cerr << "readdir_r failed ret=" << ret << endl;
+        break;
+    }
+    string dirEntry = entry.d_name;
     if (dirEntry != "." && dirEntry != "..")
       remove(dirEntry.c_str());
   }
