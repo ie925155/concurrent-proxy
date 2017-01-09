@@ -39,6 +39,7 @@ SOURCES = \
 	blacklist.cc \
 	ostreamlock.cc \
 	string-utils.cc \
+	semaphore.cc \
 
 HEADERS = $(SOURCES:.cc=.h)
 OBJECTS = $(SOURCES:.cc=.o)
