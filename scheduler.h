@@ -11,14 +11,17 @@
 
 #include <string>
 #include "request-handler.h"
+#include "thread-pool.h"
 
 class HTTPProxyScheduler {
 
  public:
+  HTTPProxyScheduler();
   void scheduleRequest(int connectionfd, const std::string& clientIPAddress);
 
  private:
   HTTPRequestHandler handler;
+  ThreadPool thread_pool;
 };
 
 #endif

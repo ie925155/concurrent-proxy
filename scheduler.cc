@@ -5,9 +5,18 @@
  */
 
 #include <utility>      // for make_pair
+#include <iostream>
 #include "scheduler.h"
 using namespace std;
 
-void HTTPProxyScheduler::scheduleRequest(int connectionfd, const string& clientIPAddress) {
-  handler.serviceRequest(make_pair(connectionfd, clientIPAddress));
+HTTPProxyScheduler::HTTPProxyScheduler()
+  : thread_pool(20)
+{
+  cout << "HTTPProxyScheduler constructor called" << endl;
+}
+void HTTPProxyScheduler::scheduleRequest(int connectionfd,
+  const string& clientIPAddress) {
+  thread_pool.schedule([this, connectionfd, clientIPAddress] () -> void {
+      handler.serviceRequest(make_pair(connectionfd, clientIPAddress));
+    });
 }

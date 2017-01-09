@@ -58,7 +58,7 @@ void ThreadPool::dispatcher(void)
         if(!workers[i].is_active){
           //cout << oslock << "new a active worker " <<  &worker << endl << osunlock;
           workers[i].is_active = true;
-          thread t([this, idx](size_t idx) -> void { do_task(idx); }, idx);
+          thread t([this](size_t idx) -> void { do_task(idx); }, idx);
           t.detach();
         }
         break;
