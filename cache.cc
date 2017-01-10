@@ -21,6 +21,8 @@
 #include "proxy-exception.h"
 #include "ostreamlock.h"
 
+#define MUTEX_NUM       997
+
 using namespace std;
 
 static const string kCacheSubdirectory = ".http-proxy-cache";
@@ -28,6 +30,9 @@ HTTPCache::HTTPCache() {
   string homeDirectoryEnv = getenv("HOME");
   cacheDirectory = homeDirectoryEnv + "/" + kCacheSubdirectory;
   ensureDirectoryExists(cacheDirectory);
+  //initilize requestLock
+  for(int i=0; i<MUTEX_NUM; i++)
+    requestLocks[i].reset(new mutex);
 }
 
 bool HTTPCache::shouldCache(const HTTPRequest& request, const HTTPResponse& response) const {
@@ -139,7 +144,7 @@ void HTTPCache::ensureDirectoryExists(const string& directory, bool empty) const
   struct stat st;
   if (lstat(directory.c_str(), &st) != 0){
     mkdir(directory.c_str(), kDefaultPermissions);
-}
+  }
 
   if (!empty) return;
   DIR *dir = opendir(directory.c_str());

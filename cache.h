@@ -10,6 +10,8 @@
 
 #include <string>
 #include <memory>
+#include <map>
+#include <mutex>
 #include "request.h"
 #include "response.h"
 
@@ -41,6 +43,7 @@ class HTTPCache {
   bool cachedEntryIsValid(const std::string& cachedFileName) const;
 
   std::string cacheDirectory;
+  std::map<uint32_t, std::unique_ptr<std::mutex>> requestLocks;
 };
 
 #endif

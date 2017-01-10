@@ -4,10 +4,6 @@
  * Provides the implementation for the HTTPRequestHandler class.
  */
 
-#include "request-handler.h"
-#include "request.h"
-#include "response.h"
-
 #include <iostream>              // for flush
 #include <string>                // for string
 #include <netdb.h>                // for gethostbyname
@@ -15,6 +11,11 @@
 #include <sys/types.h>            // for SOCK_STREAM
 #include <unistd.h>               // for close
 #include "socket++/sockstream.h" // for sockbuf, iosockstream
+
+#include "request-handler.h"
+#include "request.h"
+#include "response.h"
+#include "ostreamlock.h"
 
 using namespace std;
 
@@ -68,9 +69,9 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   HTTPResponse response;
   try {
       request.ingestRequestLine(client_stream);
-      /*cout << request.getMethod() << " " << request.getURL() <<  " "
+      /*cout << oslock << request.getMethod() << " " << request.getURL() <<  " "
            << request.getServer() << " " << request.getProtocol() << " "
-           << request.getPort() << " " << request.getPath() << endl;*/
+           << request.getPort() << " " << request.getPath() << endl << osunlock;*/
   } catch(HTTPBadRequestException exception){
       response.setPayload(exception.what());
  	  response.setResponseCode(kBadRequest);
@@ -86,13 +87,13 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   request.ingestHeader(client_stream, connection.second);
   request.ingestPayload(client_stream);
   if(cache.containsCacheEntry(request, response)){
-	printf("containCacheEntry!!!!!\n");
+	  cout << oslock << "contain cache entry" << endl << osunlock;
   	client_stream << response << flush;
-	return;
+	  return;
   }
   int client_fd = createClientSocket(request.getServer(), request.getPort());
   if(client_fd == kClientSocketError) {
-      cerr << "can not open a client socket" << endl;
+      cerr << oslock << "can not open a client socket" << endl << osunlock;
       return;
   }
   sockbuf sb2(client_fd);
@@ -102,7 +103,7 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   response.ingestResponseHeader(server_stream);
   response.ingestPayload(server_stream);
   if(cache.shouldCache(request, response)){
-	  printf("CacheEntry!!!!!\n");
+	  cout << oslock << "cache entry" << endl << osunlock;
 	  cache.cacheEntry(request, response);
   }
   client_stream << response << flush;
