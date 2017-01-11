@@ -10,7 +10,7 @@
 
 #include <utility>     // for pair
 #include <string>      // for string
-#include "request.h"
+#include "socket++/sockstream.h" // for sockbuf, iosockstream
 #include "blacklist.h"
 #include "cache.h"
 
@@ -26,12 +26,15 @@ class HTTPRequestHandler {
  * of the connection pair.
  */
 
-  void serviceRequest(const std::pair<int, std::string>& connection) throw();
+ void serviceRequest(const std::pair<int, std::string>& connection) throw();
 
  private:
-     HTTPRequest httprequest;
-     HTTPBlacklist blacklist;
-     HTTPCache cache;
+    bool ingestRequest(const std::string& clientIPAddress, iosockstream 
+        &client_stream, HTTPRequest &request, HTTPResponse &response);
+    void ingestResponse(iosockstream &client_stream, HTTPRequest &request, 
+        HTTPResponse &response);
+    HTTPBlacklist blacklist;
+    HTTPCache cache;
 };
 
 #endif

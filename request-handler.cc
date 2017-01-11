@@ -10,7 +10,6 @@
 #include <sys/socket.h>           // for socket, AF_INET
 #include <sys/types.h>            // for SOCK_STREAM
 #include <unistd.h>               // for close
-#include "socket++/sockstream.h" // for sockbuf, iosockstream
 
 #include "request-handler.h"
 #include "request.h"
@@ -60,6 +59,42 @@ static int createClientSocket(const string& host, unsigned short port) {
   return s;
 }
 
+bool HTTPRequestHandler::ingestRequest(const string& clientIPAddress, 
+iosockstream &client_stream, HTTPRequest &request, HTTPResponse &response){
+  try {
+    request.ingestRequestLine(client_stream);
+    /*cout << oslock << request.getMethod() << " " << request.getURL() <<  " "
+       << request.getServer() << " " << request.getProtocol() << " "
+       << request.getPort() << " " << request.getPath() << endl << osunlock;*/
+  } catch(HTTPBadRequestException exception){
+    response.setPayload(exception.what());
+ 	  response.setResponseCode(kBadRequest);
+    return false;
+  }
+  if(!blacklist.serverIsAllowed(request.getServer())){
+    response.setPayload("Forbidden Content");
+ 	  response.setResponseCode(kForbiddenRequest);
+	  return false;
+  };
+  request.ingestHeader(client_stream, clientIPAddress);
+  request.ingestPayload(client_stream);
+  if(cache.containsCacheEntry_r(request, response)){
+	  cout << oslock << "contain cache entry" << endl << osunlock;
+	  return false;
+  }
+  return true;
+}
+
+void HTTPRequestHandler::ingestResponse(iosockstream &server_stream, 
+  HTTPRequest &request, HTTPResponse &response)
+{
+  response.ingestResponseHeader(server_stream);
+  response.ingestPayload(server_stream);
+  if(cache.shouldCache(request, response)){
+	  cout << oslock << "cache entry" << endl << osunlock;
+	  cache.cacheEntry_r(request, response);
+  }
+}
 
 void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
 	throw() {
@@ -67,31 +102,12 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   iosockstream client_stream(&sb);
   HTTPRequest request;
   HTTPResponse response;
-  try {
-      request.ingestRequestLine(client_stream);
-      /*cout << oslock << request.getMethod() << " " << request.getURL() <<  " "
-           << request.getServer() << " " << request.getProtocol() << " "
-           << request.getPort() << " " << request.getPath() << endl << osunlock;*/
-  } catch(HTTPBadRequestException exception){
-      response.setPayload(exception.what());
- 	  response.setResponseCode(kBadRequest);
+  int client_fd;
+  if(!ingestRequest(connection.second, client_stream, request, response)){
  	  client_stream << response << flush;
-      return;
+    return;
   }
-  if(!blacklist.serverIsAllowed(request.getServer())){
-      response.setPayload("Forbidden Content");
- 	  response.setResponseCode(kForbiddenRequest);
- 	  client_stream << response << flush;
-	  return;
-  };
-  request.ingestHeader(client_stream, connection.second);
-  request.ingestPayload(client_stream);
-  if(cache.containsCacheEntry(request, response)){
-	  cout << oslock << "contain cache entry" << endl << osunlock;
-  	client_stream << response << flush;
-	  return;
-  }
-  int client_fd = createClientSocket(request.getServer(), request.getPort());
+  client_fd = createClientSocket(request.getServer(), request.getPort());
   if(client_fd == kClientSocketError) {
       cerr << oslock << "can not open a client socket" << endl << osunlock;
       return;
@@ -100,11 +116,6 @@ void HTTPRequestHandler::serviceRequest(const pair<int, string>& connection)
   iosockstream server_stream(&sb2);
   //send request to original server
   server_stream << request << flush;
-  response.ingestResponseHeader(server_stream);
-  response.ingestPayload(server_stream);
-  if(cache.shouldCache(request, response)){
-	  cout << oslock << "cache entry" << endl << osunlock;
-	  cache.cacheEntry(request, response);
-  }
+  ingestResponse(server_stream, request, response);
   client_stream << response << flush;
 }

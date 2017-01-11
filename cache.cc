@@ -44,6 +44,16 @@ bool HTTPCache::shouldCache(const HTTPRequest& request, const HTTPResponse& resp
     response.getTTL() >= kMinTTLForCache;
 }
 
+bool HTTPCache::containsCacheEntry_r(const HTTPRequest& request, HTTPResponse& response) {
+  bool ret;
+  hash<string> hasher;
+  size_t hashValue = hasher(serializeRequest(request)) % MUTEX_NUM;
+  requestLocks[hashValue]->lock();
+  ret = containsCacheEntry(request, response);
+  requestLocks[hashValue]->unlock();
+  return ret;
+} 
+
 bool HTTPCache::containsCacheEntry(const HTTPRequest& request, HTTPResponse& response) const {
   if (request.getMethod() != "GET") return false;
   string requestHash = hashRequest(request);
@@ -73,6 +83,14 @@ bool HTTPCache::containsCacheEntry(const HTTPRequest& request, HTTPResponse& res
 	 << endl << osunlock;
     return false;
   }
+}
+
+void HTTPCache::cacheEntry_r(const HTTPRequest& request, const HTTPResponse& response) {
+  hash<string> hasher;
+  size_t hashValue = hasher(serializeRequest(request)) % MUTEX_NUM;
+  requestLocks[hashValue]->lock();
+  cacheEntry(request, response);
+  requestLocks[hashValue]->unlock();
 }
 
 void HTTPCache::cacheEntry(const HTTPRequest& request, const HTTPResponse& response) {

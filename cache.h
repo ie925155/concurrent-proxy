@@ -24,14 +24,9 @@ class HTTPCache {
 
   HTTPCache();
 
-/**
- * The following three functions do what you'd expect, except that they
- * aren't thread safe.  In a MT environment, you should acquire the lock
- * on the relevant response before calling these.
- */
-  bool containsCacheEntry(const HTTPRequest& request, HTTPResponse& response) const;
+  bool containsCacheEntry_r(const HTTPRequest& request, HTTPResponse& response);
   bool shouldCache(const HTTPRequest& request, const HTTPResponse& response) const;
-  void cacheEntry(const HTTPRequest& request, const HTTPResponse& response);
+  void cacheEntry_r(const HTTPRequest& request, const HTTPResponse& response);
 
  private:
   std::string hashRequest(const HTTPRequest& request) const;
@@ -41,9 +36,11 @@ class HTTPCache {
   void ensureDirectoryExists(const std::string& directory, bool empty = false) const;
   std::string getExpirationTime(int ttl) const;
   bool cachedEntryIsValid(const std::string& cachedFileName) const;
+  bool containsCacheEntry(const HTTPRequest& request, HTTPResponse& response) const;
+  void cacheEntry(const HTTPRequest& request, const HTTPResponse& response);
 
   std::string cacheDirectory;
-  std::map<uint32_t, std::unique_ptr<std::mutex>> requestLocks;
+  std::map<uint32_t, std::unique_ptr<std::mutex> > requestLocks;
 };
 
 #endif

@@ -9,11 +9,8 @@
 #include "scheduler.h"
 using namespace std;
 
-HTTPProxyScheduler::HTTPProxyScheduler()
-  : thread_pool(20)
-{
-  cout << "HTTPProxyScheduler constructor called" << endl;
-}
+HTTPProxyScheduler::HTTPProxyScheduler() : thread_pool(20) {}
+
 void HTTPProxyScheduler::scheduleRequest(int connectionfd,
   const string& clientIPAddress) {
   thread_pool.schedule([this, connectionfd, clientIPAddress] () -> void {
